@@ -1,0 +1,55 @@
+import cv2
+import pywhatkit
+import numpy as np
+from tensorflow.keras.models import load_model
+
+# Load the pre-trained Keras model and labels
+model_path = r"C:\Users\priyanka\OneDrive\Desktop\Domain project\final\keras_model.h5"
+label_path = r"C:\Users\priyanka\OneDrive\Desktop\Domain project\final\labels.txt"
+
+model = load_model(model_path)
+with open(label_path, 'r') as f:
+    labels = f.read().splitlines()
+
+# Open a video capture object
+cap = cv2.VideoCapture(0)  # You can replace 0 with the video file path if you want to process a video file
+
+# Set the resolution of the captured frame
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)  # Set the width
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)  # Set the height
+
+    # Read a frame from the video capture
+ret, frame = cap.read()
+# Continue capturing frames even if one frame fails
+
+
+    # Preprocess the frame for the model
+resized_frame = cv2.resize(frame, (224, 224))
+expanded_frame = np.expand_dims(resized_frame, axis=0)
+preprocessed_frame = expanded_frame / 255.0  # Normalize pixel values to be between 0 and 1
+
+    # Make a prediction with the model
+predictions = model.predict(preprocessed_frame)
+predicted_class = np.argmax(predictions[0])
+confidence = predictions[0][predicted_class]
+
+    # Check if the confidence is above a certain threshold
+threshold = 0.99  # Adjust this threshold as needed
+if confidence >= threshold:
+    class_label = labels[predicted_class]
+else:
+    class_label = "Unknown Class"
+
+    # Display the class label on the frame
+text = f"Class: {class_label}, Confidence: {confidence:.2f}"
+cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+    # Display the frame
+cv2.imshow('Frame', frame)
+    
+pywhatkit.sendwhatmsg("+918297709845", "This face is not in database!",20,53)
+    
+
+# Release the video capture object and close all windows
+cap.release()
+cv2.destroyAllWindows()
